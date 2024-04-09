@@ -1,9 +1,10 @@
-from flask import Flask,render_template,url_for,redirect,request
+from flask import Flask,render_template,url_for,redirect,request,flash
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///todo.db"
+app.config['SECRET_KEY'] = "yoursecret_key"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -19,14 +20,20 @@ class Todo(db.Model):
 
 @app.route('/',methods=['POST','GET'])
 def hello_world():
-    if request.method == 'POST':
+    allTodo=Todo.query.all()
+    return render_template('index.html',allTodo=allTodo)
+
+@app.route('/add',methods=['POST','GET'])
+def add_todo():
+    if request.method =='POST':
         title=request.form['title']
         description=request.form['description']
         todo=Todo(title=title, description=description)
         db.session.add(todo)
         db.session.commit()
-    allTodo=Todo.query.all()
-    return render_template('index.html',allTodo=allTodo)
+        flash("Todo added successfully")
+        return redirect(url_for('hello_world'))
+    return render_template('add_todo.html')
 
 @app.route('/update/<int:sno>', methods=['POST','GET'])
 def update(sno):
@@ -47,6 +54,7 @@ def delete(sno):
     todo = Todo.query.filter_by(sno=sno).first()
     db.session.delete(todo)
     db.session.commit()
+    flash("Todo deleted successfully")
     return redirect(url_for('hello_world'))
 
 
