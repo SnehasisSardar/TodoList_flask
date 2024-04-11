@@ -45,6 +45,7 @@ def update(sno):
         todo.description=description
         db.session.add(todo)
         db.session.commit()
+        flash("Todo updated successfully")
         return redirect(url_for('hello_world'))
     todo=Todo.query.filter_by(sno=sno).first()
     return render_template('update.html',todo=todo)
@@ -57,6 +58,9 @@ def delete(sno):
     flash("Todo deleted successfully")
     return redirect(url_for('hello_world'))
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
 
 @app.errorhandler(404)
 def page_not_found(e):
