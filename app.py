@@ -17,6 +17,14 @@ class Todo(db.Model):
     def __repr__(self) -> str: 
         return f"{self.sno} - {self.title} - {self.description}"
 
+class Completed(db.Model):
+    sno = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.String(500), nullable=False)
+    date_created = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self) -> str:
+        return f"{self.sno} - {self.title} - {self.description}"
 
 @app.route('/',methods=['POST','GET'])
 def hello_world():
@@ -49,6 +57,30 @@ def update(sno):
         return redirect(url_for('hello_world'))
     todo=Todo.query.filter_by(sno=sno).first()
     return render_template('update.html',todo=todo)
+
+@app.route('/complete/<sno>',methods=['GET', 'POST'])
+def complete(sno):
+    data=todo=Todo.query.filter_by(sno=sno).first()
+    compl = Completed(title=data.title, description=data.description)
+    db.session.add(compl)
+    db.session.commit()
+    flash("Todo marked as completed")
+    db.session.delete(todo)
+    db.session.commit()
+    return redirect(url_for('hello_world'))
+
+@app.route('/complete/delete/<int:sno>')
+def complete_delete(sno):
+    comp=Completed.query.filter_by(sno=sno).first()
+    db.session.delete(comp)
+    db.session.commit()
+    flash("Completed Todo deleted successfully")
+    return redirect(url_for('complete_todo'))
+
+@app.route('/complete_todo',methods=['POST','GET'])
+def complete_todo():
+    completed_todo=Completed.query.all()
+    return render_template('complete.html',completed_todo=completed_todo)
 
 @app.route('/delete/<int:sno>')
 def delete(sno):
